@@ -1,0 +1,16 @@
+/home/vladix35/anaconda3/envs/myenv/lib/python3.10/site-packages/timm/models/_factory.py:138: UserWarning: Mapping deprecated model name xception to current legacy_xception.
+  model = create_fn(
+[frames] frames: train=45000 val=7500 test=7500
+========== PHASE 2 (FRAMES) → MODEL: Xception ==========
+                                                                                         
+Epoch 1/5 | Train loss 0.3740, acc 0.8255 | Val loss 0.9661, acc 0.5920, f1 0.6731 (max_prob)
+Saved new best model (loss=0.9661)
+                                                                                         
+Epoch 2/5 | Train loss 0.1803, acc 0.9280 | Val loss 1.0565, acc 0.5920, f1 0.6645 (max_prob)
+                                                                                         
+Epoch 3/5 | Train loss 0.1225, acc 0.9529 | Val loss 1.2869, acc 0.5760, f1 0.6467 (max_prob)
+                                                                                         
+Epoch 4/5 | Train loss 0.0926, acc 0.9659 | Val loss 1.1993, acc 0.5960, f1 0.6622 (max_prob)
+                                                                                         
+Epoch 5/5 | Train loss 0.0516, acc 0.9815 | Val loss 1.5545, acc 0.5960, f1 0.6622 (max_prob)
+    └─▶ TESTING frames_on_faces …
