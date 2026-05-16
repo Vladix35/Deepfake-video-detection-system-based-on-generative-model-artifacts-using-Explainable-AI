@@ -1,0 +1,7 @@
+video_name,total_frames,true_label,predicted_label,method,confidence_score,result_type
+568_628.mp4,570,1,0,mean_prob,0.3157,FN
+025_067.mp4,747,1,0,mean_prob,0.4547,FN
+880_135.mp4,435,1,0,mean_prob,0.3948,FN
+409_382.mp4,361,1,0,mean_prob,0.4533,FN
+093_121.mp4,308,1,0,mean_prob,0.3723,FN
+287_426.mp4,475,1,0,mean_prob,0.3538,FN
