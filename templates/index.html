@@ -1,0 +1,646 @@
+<!-- templates/index.html - Веб-интерфейс -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система обнаружения Deepfake видео на основе артефактов генеративных моделей с использованием Explainable AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            padding: 40px 0;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #2a5298;
+            background: #f0f4f8;
+        }
+        
+        .drop-zone .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone h3 {
+            font-size: 1.5em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .drop-zone p {
+            color: #888;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .settings {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .settings label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .settings input[type="range"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .verdict {
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .verdict.fake {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            color: white;
+        }
+        
+        .verdict.real {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            color: white;
+        }
+        
+        .verdict h2 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .verdict .confidence {
+            font-size: 1.5em;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2a5298;
+        }
+        
+        .stat-card .label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        
+        .explanations {
+            margin-top: 30px;
+        }
+        
+        .explanations h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .explanations .description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .heatmap-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .heatmap-card .info {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .heatmap-card .info .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .badge.fake {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .badge.real {
+            background: #51cf66;
+            color: white;
+        }
+        
+        .heatmap-card .images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 15px;
+        }
+        
+        .heatmap-card .images img {
+            width: 100%;
+            border-radius: 10px;
+            display: block;
+        }
+        
+        .heatmap-card .images .caption {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .error h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .error pre {
+            background: rgba(0,0,0,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: left;
+            overflow-x: auto;
+            font-size: 0.85em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .warning {
+            background: #ffd43b;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 768px) {
+            .heatmap-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .heatmap-card .images {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1> Система обнаружения Deepfake видео на основе артефактов генеративных моделей с использованием Explainable AI</h1>
+        </header>
+        
+        <section class="upload-section" id="upload-section">
+            <div class="drop-zone" id="drop-zone">
+                <div class="icon">📹</div>
+                <h3>Загрузить видео</h3>
+                <p>доступные форматы (MP4, AVI, MOV, MKV, WebM)</p>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #999;">
+                    Максимальный размер: 500 MB
+                </p>
+                <input type="file" id="file-input" accept="video/*">
+            </div>
+            
+            <div class="settings">
+                <label for="max-heatmaps">
+                    Количество визуализаций: <span id="heatmaps-value">10</span>
+                </label>
+                <input type="range" id="max-heatmaps" min="1" max="20" value="10">
+                
+                <div id="selected-file" style="margin-top: 15px; color: #667eea; font-weight: 600;"></div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn-primary" id="analyze-btn" disabled>
+                    Анализировать видео
+                </button>
+            </div>
+        </section>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3>Анализируем видео...</h3>
+            <p>Извлечение кадров → Детекция лиц → Классификация → Grad-CAM</p>
+            <p id="loading-detail">Это может занять 30-120 секунд в зависимости от длины видео</p>
+        </div>
+        
+        <div class="results" id="results">
+            <!-- Результаты будут вставлены сюда -->
+        </div>
+    </div>
+    
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const maxHeatmapsInput = document.getElementById('max-heatmaps');
+        const heatmapsValue = document.getElementById('heatmaps-value');
+        const selectedFileDiv = document.getElementById('selected-file');
+        
+        let selectedFile = null;
+        
+        // Drag & drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+        
+        maxHeatmapsInput.addEventListener('input', (e) => {
+            heatmapsValue.textContent = e.target.value;
+        });
+        
+        function handleFile(file) {
+            if (!file.type.startsWith('video/')) {
+                alert('Пожалуйста, выберите видео файл');
+                return;
+            }
+            
+            // Проверка размера
+            if (file.size > 500 * 1024 * 1024) {
+                alert('Файл слишком большой. Максимальный размер: 500 MB');
+                return;
+            }
+            
+            selectedFile = file;
+            selectedFileDiv.textContent = `Выбран: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            analyzeBtn.disabled = false;
+        }
+        
+        analyzeBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            // UI обновление
+            document.getElementById('upload-section').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('video', selectedFile);
+            formData.append('max_heatmaps', maxHeatmapsInput.value);
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                displayResults(result);
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('upload-section').style.display = 'block';
+                alert('Ошибка сети: ' + error.message);
+            }
+        });
+        
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            
+            if (!data.success) {
+                let errorHtml = `
+                    <div class="error">
+                        <h3>❌ Ошибка анализа</h3>
+                        <p>${escapeHtml(data.error)}</p>
+                `;
+                
+                if (data.video_info && data.video_info.total_frames) {
+                    errorHtml += `
+                        <div style="margin-top: 20px; text-align: left;">
+                            <p><strong>Информация о видео:</strong></p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Кадров в видео: ${data.video_info.total_frames}</li>
+                                <li>FPS: ${data.video_info.fps}</li>
+                                <li>Длительность: ${data.video_info.duration} сек</li>
+                                ${data.video_info.frames_processed ? 
+                                    `<li>Обработано кадров: ${data.video_info.frames_processed}</li>` : ''}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                if (data.traceback) {
+                    errorHtml += `<pre>${escapeHtml(data.traceback)}</pre>`;
+                }
+                
+                errorHtml += `
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn-secondary" onclick="location.reload()">🔄 Попробовать снова</button>
+                    </div>
+                `;
+                
+                resultsDiv.innerHTML = errorHtml;
+                return;
+            }
+            
+            const r = data.result;
+            const s = data.statistics;
+            const verdictClass = r.is_fake ? 'fake' : 'real';
+            const verdictText = r.is_fake ? '🔴 FAKE' : '🟢 REAL';
+            
+            // Предупреждение если нет heatmap
+            let warningHtml = '';
+            if (data.explanations.length === 0 || !data.explanations[0].heatmap_image) {
+                warningHtml = `
+                    <div class="warning">
+                        ⚠️ Grad-CAM визуализация недоступна. 
+                        Установите pytorch-grad-cam для получения объяснений: 
+                        <code>pip install pytorch-grad-cam</code>
+                    </div>
+                `;
+            }
+            
+            let heatmapsHtml = '';
+            data.explanations.forEach((exp, idx) => {
+                if (!exp.original_image) return;
+                
+                const badgeClass = exp.prediction === 'FAKE' ? 'fake' : 'real';
+                
+                let imagesHtml = `
+                    <div>
+                        <img src="${exp.original_image}" alt="Original" 
+                             onerror="this.style.display='none'">
+                        <div class="caption">Оригинал</div>
+                    </div>
+                `;
+                
+                if (exp.heatmap_image) {
+                    imagesHtml += `
+                        <div>
+                            <img src="${exp.heatmap_image}" alt="Grad-CAM"
+                                 onerror="this.style.display='none'">
+                            <div class="caption">Grad-CAM</div>
+                        </div>
+                    `;
+                }
+                
+                heatmapsHtml += `
+                    <div class="heatmap-card">
+                        <div class="info">
+                            <div>
+                                <span class="badge ${badgeClass}">${exp.prediction}</span>
+                                <span>Кадр #${exp.frame_number} (${exp.timestamp}s)</span>
+                            </div>
+                            <span style="color: #666;">Уверенность: ${exp.confidence}%</span>
+                        </div>
+                        <div class="images">
+                            ${imagesHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = `
+                <div class="verdict ${verdictClass}">
+                    <h2>${verdictText}</h2>
+                    <div class="confidence">
+                        Уверенность: ${r.confidence}% | 
+                        Вероятность fake: ${r.fake_probability}%
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">
+                    </div>
+                </div>
+                
+                ${warningHtml}
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="value">${s.total_frames_analyzed}</div>
+                        <div class="label">Кадров проанализировано</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${s.frames_predicted_fake}</div>
+                        <div class="label">Кадров как FAKE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${s.frames_predicted_real}</div>
+                        <div class="label">Кадров как REAL</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${s.video_duration_seconds}s</div>
+                        <div class="label">Длительность видео</div>
+                    </div>
+                </div>
+                
+                <div class="explanations">
+                    <h3>🔥 Grad-CAM визуализация (топ-${data.explanations.length} кадров)</h3>
+                    <p class="description">
+                        Красные/жёлтые области на heatmap — зоны, на которые модель обратила внимание 
+                        при принятии решения. Это помогает объяснить, какие артефакты генеративной 
+                        модели были обнаружены (например, несоответствия в текстуре кожи, глаз, 
+                        границ лица).
+                    </p>
+                    <div class="heatmap-grid">
+                        ${heatmapsHtml || '<p style="color: #666;">Нет доступных визуализаций</p>'}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="btn-secondary" onclick="location.reload()">
+                        🔄 Анализировать другое видео
+                    </button>
+                </div>
+            `;
+            
+            // Плавная прокрутка к результатам
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
